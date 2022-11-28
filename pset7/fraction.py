@@ -19,6 +19,26 @@ class Frac:
     def simplify(cls, frac):
         common_divisor = gcd(frac.x, frac.y)
         return cls(int(frac.x/common_divisor), int(frac.y/common_divisor))
+    
+    @classmethod
+    def from_number(cls, number):
+        if isinstance(number, (int, float)):
+            ratio = float.as_integer_ratio(float(number))
+            frac = Frac(ratio[0], ratio[1])
+            return frac
+        else:
+            raise ValueError("Argument should be of type int | float")
+        
+    @classmethod
+    def parse(cls, obj):
+        if isinstance(obj, (int, float)):
+            ratio = float.as_integer_ratio(float(obj))
+            frac = Frac(ratio[0], ratio[1])
+            return frac
+        elif isinstance(obj, (Frac)):
+            return obj
+        else:
+            raise ValueError("Argument should be of type int | float | Frac")
 
     def __str__(self):
         if self.y == 1:
@@ -45,9 +65,7 @@ class Frac:
         return numenator_1 <= numenator_2
 
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            ratio = float.as_integer_ratio(float(other))
-            other = Frac(ratio[0], ratio[1])
+        other = Frac.parse(other)
         numenator_1 = self.x * other.y
         denominator = self.y * other.y
         numenator_2 = self.y * other.x
@@ -67,9 +85,7 @@ class Frac:
         return (-self) + other
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            ratio = float.as_integer_ratio(float(other))
-            other = Frac(ratio[0], ratio[1])
+        other = Frac.parse(other)
 
         result = Frac.simplify(Frac(self.x * other.x, self.y * other.y))
     
@@ -81,15 +97,17 @@ class Frac:
     __rmul__ = __mul__    
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            ratio = float.as_integer_ratio(float(other))
-            other = Frac(ratio[0], ratio[1])
+        other = Frac.parse(other)
+        if other.x == 0:
+            raise ZeroDivisionError
+        
         return self * (~other)
 
     def __rtruediv__(self, other):
-        if isinstance(other, (int, float)):
-            ratio = float.as_integer_ratio(float(other))
-            other = Frac(ratio[0], ratio[1])
+        if self.x == 0:
+            raise ZeroDivisionError
+        
+        other = Frac.parse(other)
         return (~self) * other
 
     # operatory jednoargumentowe
@@ -176,9 +194,19 @@ class TestFrac(unittest.TestCase):
         self.assertEqual(Frac(1, 4) / 2, Frac(1, 8))
         self.assertEqual(Frac(1, 8) / 2, Frac(1, 16))
         self.assertEqual(2 / Frac(1, 4), Frac(8, 1))
+
+        with self.assertRaises(ZeroDivisionError):
+            Frac(1, 1) / 0
+        
+        with self.assertRaises(ZeroDivisionError):
+            Frac(1, 1) / Frac(0, 1)
         
     def test_invert(self):
         self.assertEqual(~Frac(1, 2), Frac(2, 1))
+
+    def test_from_number(self):
+        self.assertEqual(Frac.from_number(1.5), Frac(3, 2))
+        self.assertEqual(Frac.from_number(100.5), Frac(201, 2))
 
 if __name__ == '__main__':
     unittest.main()
