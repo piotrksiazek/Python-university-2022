@@ -110,6 +110,9 @@ class Frac:
         other = Frac.parse(other)
         return (~self) * other
 
+    __div__ = __truediv__
+    __rdiv__ = __rtruediv__
+
     # operatory jednoargumentowe
     def __pos__(self):
         return self
